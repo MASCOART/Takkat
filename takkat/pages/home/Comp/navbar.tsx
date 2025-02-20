@@ -3,23 +3,23 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { Menu, Search, ShoppingCart, User, X, Trash2 } from "lucide-react"
+import { Menu, Search, ShoppingCart, User, X, Trash2, Settings, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter } from "@/components/ui/sheet"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
-
-// This would typically come from your auth service
-const isLoggedIn = false
+import { onAuthStateChanged, signOut } from "firebase/auth"
+import { auth } from "@/lib/firebase" // Adjust the import path based on your Firebase setup
 
 interface CartItem {
   id: string
   name: string
   price: number
   quantity: number
-  color: string
-  size: string
-  imageUrl: string
+  selectedColor: string
+  selectedSize: string
+  selectedImageUrl: string
+  selectedQuantity: number
 }
 
 export default function Navbar() {
@@ -27,12 +27,24 @@ export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [cartItems, setCartItems] = useState<CartItem[]>([])
+  const [user, setUser] = useState<any>(null) // Use a more specific type if possible
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false)
 
   useEffect(() => {
     const savedCartItems = localStorage.getItem("cartItems")
     if (savedCartItems) {
       setCartItems(JSON.parse(savedCartItems))
     }
+
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUser(user)
+      } else {
+        setUser(null)
+      }
+    })
+
+    return () => unsubscribe()
   }, [])
 
   const removeFromCart = (id: string) => {
@@ -42,7 +54,16 @@ export default function Navbar() {
   }
 
   const getTotalPrice = () => {
-    return cartItems.reduce((total, item) => total + item.price * item.quantity, 0)
+    return cartItems.reduce((total, item) => total + item.price * item.selectedQuantity, 0)
+  }
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth)
+      setUser(null)
+    } catch (error) {
+      console.error("Error signing out: ", error)
+    }
   }
 
   return (
@@ -60,18 +81,7 @@ export default function Navbar() {
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-6 text-sm">
-          <Link href="/necklaces" className="text-foreground hover:text-muted-foreground transition-colors">
-            القلائد
-          </Link>
-          <Link href="/earrings" className="text-foreground hover:text-muted-foreground transition-colors">
-            الأقراط
-          </Link>
-          <Link href="/bracelets" className="text-foreground hover:text-muted-foreground transition-colors">
-            الأساور
-          </Link>
-          <Link href="/rings" className="text-foreground hover:text-muted-foreground transition-colors">
-            الخواتم
-          </Link>
+          {/* Navigation links */}
         </nav>
 
         {/* Logo */}
@@ -110,7 +120,7 @@ export default function Navbar() {
               <Button variant="ghost" size="icon" className="relative">
                 <ShoppingCart className="h-5 w-5" />
                 <span className="absolute -left-2 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-black text-[10px] text-white">
-                  {cartItems.length}
+                  {cartItems.reduce((total, item) => total + item.selectedQuantity, 0)}
                 </span>
               </Button>
             </SheetTrigger>
@@ -124,26 +134,38 @@ export default function Navbar() {
                 ) : (
                   <div className="space-y-4">
                     {cartItems.map((item) => (
-                      <div key={item.id} className="flex items-center space-x-4">
-                        <Image
-                          src={item.imageUrl || "/placeholder.svg"}
-                          alt={item.name}
-                          width={50}
-                          height={50}
-                          className="rounded-md"
-                        />
-                        <div className="flex-1">
-                          <h3 className="font-semibold">{item.name}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            {item.color}, {item.size}
-                          </p>
-                          <p className="text-sm">
-                            {item.quantity} x ₪{(item.price || 0).toFixed(2)}
-                          </p>
-                        </div>
+                      <div key={item.id} className="flex items-center space-x-4 rtl:space-x-reverse">
                         <Button variant="ghost" size="icon" onClick={() => removeFromCart(item.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
+                        <div className="flex-1 text-right">
+                          <h3 className="font-semibold">{item.name}</h3>
+                          <div className="flex flex-wrap gap-2 mt-1">
+                            {item.selectedColor && (
+                              <span className="flex items-center gap-1 text-sm px-2 py-1 bg-gray-100 rounded-full">
+                                <span
+                                  className="w-3 h-3 rounded-full"
+                                  style={{ backgroundColor: item.selectedColor }}
+                                ></span>
+                                {item.selectedColor}
+                              </span>
+                            )}
+                            {item.selectedSize && (
+                              <span className="text-sm px-2 py-1 bg-gray-100 rounded-full">{item.selectedSize}</span>
+                            )}
+                          </div>
+                          <p className="text-sm mt-1">
+                            الكمية: {item.selectedQuantity} x ₪{(item.price || 0).toFixed(2)}
+                          </p>
+                        </div>
+                        <div className="relative w-16 h-16 rounded-md overflow-hidden">
+                          <Image
+                            src={item.selectedImageUrl || "/placeholder.svg"}
+                            alt={item.name}
+                            layout="fill"
+                            objectFit="cover"
+                          />
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -155,23 +177,53 @@ export default function Navbar() {
                     <span className="font-semibold">المجموع:</span>
                     <span>₪{getTotalPrice().toFixed(2)}</span>
                   </div>
-                  <Button className="w-full" onClick={() => setIsCartOpen(false)}>
+                  <Button className="w-full bg-black" onClick={() => setIsCartOpen(false)}>
                     عرض السلة
                   </Button>
-                  <Button className="w-full" disabled={cartItems.length === 0}>
+                  <Button className="w-full bg-black" disabled={cartItems.length === 0}>
                     الدفع
                   </Button>
                 </div>
               </SheetFooter>
             </SheetContent>
           </Sheet>
-          {isLoggedIn ? (
-            <Button variant="ghost" size="icon">
-              <User className="h-5 w-5" />
-            </Button>
+
+          {user ? (
+            <div className="relative">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+              >
+                <User className="h-5 w-5" />
+              </Button>
+              {isProfileDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                  <div className="py-1">
+                    <div className="px-4 py-2 text-sm text-gray-700">{user.email}</div>
+                    <Link
+                      href="/settings"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      <Settings className="inline-block h-4 w-4 mr-2" />
+                      الإعدادات
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      <LogOut className="inline-block h-4 w-4 mr-2" />
+                      تسجيل الخروج
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           ) : (
             <Button size="sm" className="hidden md:inline-flex bg-black">
-              ابدأ الآن
+              <Link href="/auth/login" className="text-foreground hover:text-muted-foreground transition-colors no-underline text-white">
+                ابدأ الآن
+              </Link>
             </Button>
           )}
         </div>
@@ -181,21 +233,14 @@ export default function Navbar() {
       <div className={cn("fixed inset-0 z-50 bg-background md:hidden", isMobileMenuOpen ? "block" : "hidden")}>
         <div className="container h-full px-4 pb-6 pt-20">
           <nav className="flex flex-col space-y-4">
-            <Link href="/rings" className="text-lg font-medium" onClick={() => setIsMobileMenuOpen(false)}>
-              الخواتم
-            </Link>
-            <Link href="/bracelets" className="text-lg font-medium" onClick={() => setIsMobileMenuOpen(false)}>
-              الأساور
-            </Link>
-            <Link href="/earrings" className="text-lg font-medium" onClick={() => setIsMobileMenuOpen(false)}>
-              الأقراط
-            </Link>
-            <Link href="/necklaces" className="text-lg font-medium" onClick={() => setIsMobileMenuOpen(false)}>
-              القلائد
-            </Link>
+            <Button className="bg-black">
+              <Link href="/Home" className="text-foreground hover:text-muted-foreground transition-colors no-underline text-white">
+                الصفحة الرئيسية
+              </Link>
+            </Button>
           </nav>
 
-          {!isLoggedIn && (
+          {!user && (
             <div className="mt-6">
               <Button className="w-full">ابدأ الآن</Button>
             </div>
@@ -215,4 +260,3 @@ export default function Navbar() {
     </header>
   )
 }
-

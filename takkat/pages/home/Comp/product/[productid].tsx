@@ -1,14 +1,15 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { useRouter } from "next/router" // Changed from next/navigation to next/router
+import { useRouter } from "next/router"
 import Image from "next/image"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import { doc, getDoc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { Button } from "@/components/ui/button"
-import { Star, ChevronLeft, ChevronRight, Heart } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Star, ChevronLeft, ChevronRight, Heart, Plus, Minus } from "lucide-react"
 
 interface Product {
   id: string
@@ -26,18 +27,24 @@ interface Product {
   sku: string
 }
 
+interface CartItem extends Product {
+  selectedColor: string
+  selectedSize: string
+  selectedImageUrl: string
+  selectedQuantity: number
+}
+
 export default function ProductPage() {
   const router = useRouter()
-  const { productid } = router.query // Changed from params to router.query
+  const { productid } = router.query
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedColor, setSelectedColor] = useState<string>("")
   const [selectedSize, setSelectedSize] = useState<string>("")
+  const [selectedQuantity, setSelectedQuantity] = useState(1)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [error, setError] = useState<string | null>(null)
-  const [cartItems, setCartItems] = useState<
-    Array<{ product: Product; color: string; size: string; quantity: number }>
-  >([])
+  const [cartItems, setCartItems] = useState<CartItem[]>([])
 
   const loadCartItems = useCallback(() => {
     const savedCartItems = localStorage.getItem("cartItems")
@@ -49,7 +56,6 @@ export default function ProductPage() {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        // Debug log
         console.log("Fetching product with ID:", productid)
 
         if (!productid) {
@@ -61,7 +67,6 @@ export default function ProductPage() {
         const productRef = doc(db, "products", productid as string)
         const productSnap = await getDoc(productRef)
 
-        // Debug log
         console.log("Product data:", productSnap.data())
 
         if (productSnap.exists()) {
@@ -79,12 +84,12 @@ export default function ProductPage() {
             sku: productData.sku || "",
           } as Product
 
-          // Debug log
           console.log("Formatted product:", formattedProduct)
 
           setProduct(formattedProduct)
           if (formattedProduct.colors.length > 0) {
             setSelectedColor(formattedProduct.colors[0].name)
+            setCurrentImageIndex(0)
           }
           if (formattedProduct.sizes.length > 0) {
             setSelectedSize(formattedProduct.sizes[0])
@@ -107,47 +112,78 @@ export default function ProductPage() {
     }
   }, [productid, router, loadCartItems])
 
+  const handleColorChange = (colorName: string) => {
+    setSelectedColor(colorName)
+    const newIndex = product?.colors.findIndex((color) => color.name === colorName) ?? 0
+    setCurrentImageIndex(newIndex)
+  }
+
   const handleNextImage = () => {
     if (product?.colors.length) {
       setCurrentImageIndex((prev) => (prev + 1) % product.colors.length)
+      setSelectedColor(product.colors[(currentImageIndex + 1) % product.colors.length].name)
     }
   }
 
   const handlePrevImage = () => {
     if (product?.colors.length) {
       setCurrentImageIndex((prev) => (prev - 1 + product.colors.length) % product.colors.length)
+      setSelectedColor(product.colors[(currentImageIndex - 1 + product.colors.length) % product.colors.length].name)
     }
+  }
+
+  const handleQuantityChange = (change: number) => {
+    setSelectedQuantity((prev) => Math.max(1, prev + change))
   }
 
   const handleAddToCart = () => {
-    if (!selectedColor || !selectedSize) {
-      setError("الرجاء اختيار اللون والمقاس")
+    if (!product) return
+
+    if (!selectedColor) {
+      setError("الرجاء اختيار اللون")
       return
     }
-    if (product) {
-      if (isProductInCart()) {
-        alert("هذا المنتج موجود بالفعل في سلة التسوق")
-        return
-      }
-      const newItem = {
-        product,
-        color: selectedColor,
-        size: selectedSize,
-        quantity: 1,
-      }
+
+    if (product.sizes.length > 0 && !selectedSize) {
+      setError("الرجاء اختيار المقاس")
+      return
+    }
+
+    const selectedColorObject = product.colors.find((color) => color.name === selectedColor)
+    if (!selectedColorObject) {
+      setError("حدث خطأ في اختيار اللون")
+      return
+    }
+
+    const newItem: CartItem = {
+      ...product,
+      selectedColor,
+      selectedSize: product.sizes.length > 0 ? selectedSize : "",
+      selectedImageUrl: selectedColorObject.imageUrl,
+      selectedQuantity,
+    }
+
+    const existingItemIndex = cartItems.findIndex(
+      (item) =>
+        item.id === newItem.id &&
+        item.selectedColor === newItem.selectedColor &&
+        item.selectedSize === newItem.selectedSize,
+    )
+
+    if (existingItemIndex !== -1) {
+      const updatedCartItems = [...cartItems]
+      updatedCartItems[existingItemIndex].selectedQuantity += selectedQuantity
+      setCartItems(updatedCartItems)
+      localStorage.setItem("cartItems", JSON.stringify(updatedCartItems))
+    } else {
       const updatedCartItems = [...cartItems, newItem]
       setCartItems(updatedCartItems)
       localStorage.setItem("cartItems", JSON.stringify(updatedCartItems))
-      setError(null)
-      alert("تمت إضافة المنتج إلى السلة")
     }
-  }
 
-  const isProductInCart = useCallback(() => {
-    return cartItems.some(
-      (item) => item.product.id === product?.id && item.color === selectedColor && item.size === selectedSize,
-    )
-  }, [cartItems, product, selectedColor, selectedSize])
+    setError(null)
+    alert("تمت إضافة المنتج إلى السلة")
+  }
 
   if (loading) {
     return (
@@ -247,9 +283,9 @@ export default function ProductPage() {
               {product.colors.map((color, index) => (
                 <button
                   key={color.name}
-                  onClick={() => setCurrentImageIndex(index)}
+                  onClick={() => handleColorChange(color.name)}
                   className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden ${
-                    index === currentImageIndex ? "ring-2 ring-primary" : "ring-1 ring-gray-200"
+                    color.name === selectedColor ? "ring-2 ring-primary" : "ring-1 ring-gray-200"
                   }`}
                 >
                   {color.imageUrl ? (
@@ -299,7 +335,7 @@ export default function ProductPage() {
                 {product.colors.map((color) => (
                   <button
                     key={color.name}
-                    onClick={() => setSelectedColor(color.name)}
+                    onClick={() => handleColorChange(color.name)}
                     className={`w-12 h-12 rounded-full border-2 ${
                       selectedColor === color.name ? "border-primary" : "border-transparent"
                     }`}
@@ -332,9 +368,33 @@ export default function ProductPage() {
             </div>
           )}
 
+          <div className="mb-6">
+            <h3 className="text-sm font-medium mb-2">الكمية</h3>
+            <div className="flex items-center">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => handleQuantityChange(-1)}
+                disabled={selectedQuantity <= 1}
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+              <Input
+                type="number"
+                value={selectedQuantity}
+                onChange={(e) => setSelectedQuantity(Math.max(1, Number.parseInt(e.target.value) || 1))}
+                className="w-16 mx-2 text-center"
+                min="1"
+              />
+              <Button variant="outline" size="icon" onClick={() => handleQuantityChange(1)}>
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
           <div className="flex gap-4">
-            <Button size="lg" className="flex-1" onClick={handleAddToCart} disabled={product.quantity === 0}>
-              {product.quantity === 0 ? "نفذت الكمية" : "أضف إلى السلة"}
+            <Button size="lg" className="flex-1" onClick={handleAddToCart}>
+              أضف إلى السلة
             </Button>
             <Button size="lg" variant="outline">
               <Heart className="h-5 w-5" />
@@ -343,6 +403,10 @@ export default function ProductPage() {
 
           {product.quantity <= 5 && product.quantity > 0 && (
             <p className="text-red-600 text-sm mt-2">باقي {product.quantity} قطع فقط في المخزون!</p>
+          )}
+
+          {product.quantity === 0 && (
+            <p className="text-red-600 text-sm mt-2">هذا المنتج غير متوفر حالياً. يمكنك إضافته إلى قائمة الانتظار.</p>
           )}
 
           <div className="mt-8">
