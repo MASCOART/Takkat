@@ -10,7 +10,6 @@ import Link from "next/link"
 import { Card, CardBody, CardHeader, Input, Button, Spinner } from "@nextui-org/react"
 import { motion } from "framer-motion"
 import { Logo } from "./Comp/Logo"
-import FloatingBubblesBackground from "./Comp/FloatingBubblesBackground"
 
 const MotionCard = motion(Card)
 
@@ -83,8 +82,7 @@ export default function Register() {
   }
 
   return (
-    <FloatingBubblesBackground >
-      <div dir="rtl" className="relative z-10 flex items-center justify-center  w-full">
+      <div dir="rtl" className="relative z-10 flex items-center justify-center  w-full mt-10">
         <MotionCard
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -150,6 +148,5 @@ export default function Register() {
           </CardBody>
         </MotionCard>
       </div>
-    </FloatingBubblesBackground>
   )
 }

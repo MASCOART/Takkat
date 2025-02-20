@@ -79,7 +79,7 @@ export function ProductGrid({ products }: ProductGridProps) {
           transition={{ duration: 0.5, delay: index * 0.1 }}
           viewport={{ once: true }}
           className={`group relative ${product.quantity > 0 ? "cursor-pointer" : "cursor-not-allowed"}`}
-          onClick={() => product.quantity > 0 && router.push(`/product/${product.id}`)}
+          onClick={() => product.quantity > 0 && router.push(`/home/Comp/product/${product.id}`)}
         >
           <div
             className="relative aspect-square mb-4 overflow-hidden"

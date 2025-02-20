@@ -30,7 +30,7 @@ export default function Login() {
       const user = userCredential.user
 
       if (user.emailVerified) {
-        router.push("/home/Home")
+        router.push("/Home")
       } else {
         setError("يرجى التحقق من بريدك الإلكتروني قبل تسجيل الدخول. تحقق من صندوق الوارد للحصول على رسالة التحقق.")
       }
@@ -49,8 +49,8 @@ export default function Login() {
   }
 
   return (
-    <FloatingBubblesBackground >
-      <div dir="rtl" className="relative z-10 flex items-center justify-center  w-full">
+
+      <div dir="rtl" className="relative z-10 flex items-center justify-center  w-full mt-10">
         <MotionCard
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -105,7 +105,6 @@ export default function Login() {
           </CardBody>
         </MotionCard>
       </div>
-    </FloatingBubblesBackground>
   )
 }
 

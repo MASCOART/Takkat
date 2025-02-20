@@ -1,21 +1,49 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { Menu, Search, ShoppingCart, User, X } from "lucide-react"
+import { Menu, Search, ShoppingCart, User, X, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter } from "@/components/ui/sheet"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 
 // This would typically come from your auth service
 const isLoggedIn = false
 
+interface CartItem {
+  id: string
+  name: string
+  price: number
+  quantity: number
+  color: string
+  size: string
+  imageUrl: string
+}
+
 export default function Navbar() {
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [cartItems, setCartItems] = useState<CartItem[]>([])
+
+  useEffect(() => {
+    const savedCartItems = localStorage.getItem("cartItems")
+    if (savedCartItems) {
+      setCartItems(JSON.parse(savedCartItems))
+    }
+  }, [])
+
+  const removeFromCart = (id: string) => {
+    const updatedCart = cartItems.filter((item) => item.id !== id)
+    setCartItems(updatedCart)
+    localStorage.setItem("cartItems", JSON.stringify(updatedCart))
+  }
+
+  const getTotalPrice = () => {
+    return cartItems.reduce((total, item) => total + item.price * item.quantity, 0)
+  }
 
   return (
     <header className="border-b" dir="rtl">
@@ -82,7 +110,7 @@ export default function Navbar() {
               <Button variant="ghost" size="icon" className="relative">
                 <ShoppingCart className="h-5 w-5" />
                 <span className="absolute -left-2 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-black text-[10px] text-white">
-                  0
+                  {cartItems.length}
                 </span>
               </Button>
             </SheetTrigger>
@@ -91,8 +119,50 @@ export default function Navbar() {
                 <SheetTitle>سلة التسوق</SheetTitle>
               </SheetHeader>
               <div className="mt-8">
-                <p className="text-center text-muted-foreground">سلة التسوق فارغة</p>
+                {cartItems.length === 0 ? (
+                  <p className="text-center text-muted-foreground">سلة التسوق فارغة</p>
+                ) : (
+                  <div className="space-y-4">
+                    {cartItems.map((item) => (
+                      <div key={item.id} className="flex items-center space-x-4">
+                        <Image
+                          src={item.imageUrl || "/placeholder.svg"}
+                          alt={item.name}
+                          width={50}
+                          height={50}
+                          className="rounded-md"
+                        />
+                        <div className="flex-1">
+                          <h3 className="font-semibold">{item.name}</h3>
+                          <p className="text-sm text-muted-foreground">
+                            {item.color}, {item.size}
+                          </p>
+                          <p className="text-sm">
+                            {item.quantity} x ₪{(item.price || 0).toFixed(2)}
+                          </p>
+                        </div>
+                        <Button variant="ghost" size="icon" onClick={() => removeFromCart(item.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
+              <SheetFooter className="mt-8">
+                <div className="w-full space-y-4">
+                  <div className="flex justify-between">
+                    <span className="font-semibold">المجموع:</span>
+                    <span>₪{getTotalPrice().toFixed(2)}</span>
+                  </div>
+                  <Button className="w-full" onClick={() => setIsCartOpen(false)}>
+                    عرض السلة
+                  </Button>
+                  <Button className="w-full" disabled={cartItems.length === 0}>
+                    الدفع
+                  </Button>
+                </div>
+              </SheetFooter>
             </SheetContent>
           </Sheet>
           {isLoggedIn ? (

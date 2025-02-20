@@ -171,7 +171,7 @@ export default function CategoryPage() {
               اكتشف أحدث مجموعة من {category.name}. منتجات عالية الجودة مصممة لتعزيز أناقتك وراحتك.
             </p>
             <nav className="text-sm mb-4">
-              <Link href="/" className="text-gray-500 hover:text-gray-900">
+              <Link href="/Home" className="text-gray-500 hover:text-gray-900">
                 الرئيسية
               </Link>
               <span className="mx-2">/</span>
