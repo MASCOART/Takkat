@@ -10,6 +10,7 @@ import { db } from "@/lib/firebase"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Star, ChevronLeft, ChevronRight, Heart, Plus, Minus } from "lucide-react"
+import Navbar from "../navbar"
 
 interface Product {
   id: string
@@ -212,9 +213,12 @@ export default function ProductPage() {
   }
 
   return (
+    <div>
+      <Navbar/>
+
     <div className="container mx-auto px-4 py-8" dir="rtl">
       <nav className="text-sm mb-8">
-        <Link href="/" className="text-gray-500 hover:text-gray-900">
+        <Link href="/Home" className="text-gray-500 hover:text-gray-900">
           الرئيسية
         </Link>
         <span className="mx-2">/</span>
@@ -393,7 +397,7 @@ export default function ProductPage() {
           </div>
 
           <div className="flex gap-4">
-            <Button size="lg" className="flex-1" onClick={handleAddToCart}>
+            <Button size="lg" className="flex-1 bg-black" onClick={handleAddToCart}>
               أضف إلى السلة
             </Button>
             <Button size="lg" variant="outline">
@@ -420,6 +424,8 @@ export default function ProductPage() {
         </div>
       </div>
     </div>
+    </div>
+
   )
 }
 

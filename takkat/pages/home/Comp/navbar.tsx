@@ -3,13 +3,15 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { Menu, Search, ShoppingCart, User, X, Trash2, Settings, LogOut } from "lucide-react"
+import { Menu, Search, ShoppingCart, User, X, ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter } from "@/components/ui/sheet"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { onAuthStateChanged, signOut } from "firebase/auth"
-import { auth } from "@/lib/firebase" // Adjust the import path based on your Firebase setup
+import { auth, db } from "@/lib/firebase"
+import { collection, query, where, getDocs } from "firebase/firestore"
+import { useRouter } from "next/navigation"
 
 interface CartItem {
   id: string
@@ -22,13 +24,35 @@ interface CartItem {
   selectedQuantity: number
 }
 
+interface Color {
+  name: string
+  imageUrl: string
+}
+
+interface Product {
+  id: string
+  name: string
+  sku: string
+  price: number
+  description: string
+  colors: Color[]
+  sizes: string[]
+  salePrice?: number
+}
+
 export default function Navbar() {
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [cartItems, setCartItems] = useState<CartItem[]>([])
-  const [user, setUser] = useState<any>(null) // Use a more specific type if possible
+  const [user, setUser] = useState<any>(null)
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [searchedProduct, setSearchedProduct] = useState<Product | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [currentColorIndex, setCurrentColorIndex] = useState(0)
+  const router = useRouter()
 
   useEffect(() => {
     const savedCartItems = localStorage.getItem("cartItems")
@@ -66,6 +90,51 @@ export default function Navbar() {
     }
   }
 
+  const handleSearch = async () => {
+    if (searchQuery.length !== 8) {
+      setError("الرجاء إدخال رقم SKU صحيح مكون من 8 أحرف")
+      return
+    }
+
+    setIsLoading(true)
+    setError(null)
+    setSearchedProduct(null)
+    setCurrentColorIndex(0)
+
+    try {
+      const productsRef = collection(db, "products")
+      const q = query(productsRef, where("sku", "==", searchQuery))
+      const querySnapshot = await getDocs(q)
+
+      if (!querySnapshot.empty) {
+        const productDoc = querySnapshot.docs[0]
+        const productData = { id: productDoc.id, ...productDoc.data() } as Product
+        setSearchedProduct(productData)
+      } else {
+        setError(`لم يتم العثور على منتج برقم SKU "${searchQuery}"`)
+      }
+    } catch (err) {
+      console.error("Error fetching product:", err)
+      setError("حدث خطأ أثناء البحث عن المنتج. الرجاء المحاولة مرة أخرى.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleNextColor = () => {
+    if (searchedProduct) {
+      setCurrentColorIndex((prevIndex) => (prevIndex + 1) % searchedProduct.colors.length)
+    }
+  }
+
+  const handlePrevColor = () => {
+    if (searchedProduct) {
+      setCurrentColorIndex(
+        (prevIndex) => (prevIndex - 1 + searchedProduct.colors.length) % searchedProduct.colors.length,
+      )
+    }
+  }
+
   return (
     <header className="border-b" dir="rtl">
       <div className="container flex h-20 items-center justify-between px-4 md:px-6">
@@ -80,15 +149,13 @@ export default function Navbar() {
         </Button>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center space-x-6 text-sm">
-          {/* Navigation links */}
-        </nav>
+        <nav className="hidden md:flex items-center space-x-6 text-sm">{/* Navigation links */}</nav>
 
         {/* Logo */}
         <div className="absolute right-1/2 translate-x-1/2">
-          <Link href="/" className="flex flex-col items-center">
+          <Link href="/Home" className="flex flex-col items-center">
             <Image
-              src="https://media.discordapp.net/attachments/1317885123361767445/1342092183158784020/9887e892-5770-45e7-8db4-b7e276d4e069.jpg?ex=67b8603f&is=67b70ebf&hm=c81468b8c175680327dfd7c3a0c4a4ad7a27bf967c222f33903b9e934c2429e8&=&format=webp&width=449&height=449"
+              src="https://media.discordapp.net/attachments/1317885123361767445/1342263249562767420/image_1.png?ex=67b8ff90&is=67b7ae10&hm=6b888129c37ef561b5bd17a8bfb44550d367916bb58cbdf13954e7431bbe2a35&=&format=webp&quality=lossless&width=449&height=449"
               alt="Takkat"
               width={120}
               height={40}
@@ -105,13 +172,84 @@ export default function Navbar() {
                 <Search className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="top" className="w-full">
+            <SheetContent side="top" className="w-full max-w-2xl mx-auto">
               <SheetHeader>
-                <SheetTitle>البحث</SheetTitle>
+                <SheetTitle>البحث عن منتج</SheetTitle>
               </SheetHeader>
-              <div className="mt-4">
-                <Input placeholder="ابحث عن المنتجات..." className="w-full" />
+              <div className="mt-4 flex items-center">
+                <Input
+                  placeholder="أدخل رقم SKU (8 أحرف)"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value.toUpperCase())}
+                  className="flex-grow ml-2"
+                />
+                <Button className="bg-black" onClick={handleSearch} disabled={isLoading}>
+                  بحث
+                </Button>
               </div>
+              {isLoading && <p className="mt-4 text-center">جاري البحث...</p>}
+              {error && <p className="mt-4 text-red-500 text-center">{error}</p>}
+              {searchedProduct && (
+                <div className="mt-6 p-4 border rounded-lg">
+                  <div className="flex flex-col md:flex-row gap-4">
+                    <div className="relative w-full md:w-1/3">
+                      <div className="aspect-square relative overflow-hidden rounded-lg">
+                        <Image
+                          src={searchedProduct.colors[currentColorIndex]?.imageUrl || "/placeholder.svg"}
+                          alt={searchedProduct.name}
+                          layout="fill"
+                          objectFit="cover"
+                        />
+                      </div>
+                      {searchedProduct.colors.length > 1 && (
+                        <div className="flex justify-between mt-2">
+                          <Button variant="outline" size="sm" onClick={handlePrevColor}>
+                            <ChevronRight className="h-4 w-4" />
+                          </Button>
+                          <Button variant="outline" size="sm" onClick={handleNextColor}>
+                            <ChevronLeft className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-xl font-semibold mb-2">{searchedProduct.name}</h3>
+                      <p className="text-sm mb-2">رقم SKU: {searchedProduct.sku}</p>
+                      <div className="mb-2">
+                        {searchedProduct.salePrice ? (
+                          <div className="flex items-center gap-2">
+                            <span className="text-xl font-bold text-red-600">₪{searchedProduct.salePrice}</span>
+                            <span className="text-sm text-gray-500 line-through">₪{searchedProduct.price}</span>
+                            <span className="text-xs text-red-600">
+                              (خصم{" "}
+                              {Math.round(
+                                ((searchedProduct.price - searchedProduct.salePrice) / searchedProduct.price) * 100,
+                              )}
+                              %)
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-xl font-bold">₪{searchedProduct.price}</span>
+                        )}
+                      </div>
+                      <p className="text-sm mb-4">{searchedProduct.description}</p>
+                      {searchedProduct.sizes.length > 0 && (
+                        <div className="mb-4">
+                          <h4 className="text-sm font-semibold mb-2">المقاسات المتاحة:</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {searchedProduct.sizes.map((size) => (
+                              <span key={size} className="px-2 py-1 bg-gray-100 rounded-md text-sm">
+                                {size}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      <Button className="bg-black" onClick={() => router.push(`/home/Comp/product/${searchedProduct.id}`)}>عرض تفاصيل المنتج</Button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </SheetContent>
           </Sheet>
 
@@ -136,36 +274,31 @@ export default function Navbar() {
                     {cartItems.map((item) => (
                       <div key={item.id} className="flex items-center space-x-4 rtl:space-x-reverse">
                         <Button variant="ghost" size="icon" onClick={() => removeFromCart(item.id)}>
-                          <Trash2 className="h-4 w-4" />
+                          <X className="h-4 w-4" />
                         </Button>
                         <div className="flex-1 text-right">
                           <h3 className="font-semibold">{item.name}</h3>
-                          <div className="flex flex-wrap gap-2 mt-1">
-                            {item.selectedColor && (
-                              <span className="flex items-center gap-1 text-sm px-2 py-1 bg-gray-100 rounded-full">
-                                <span
-                                  className="w-3 h-3 rounded-full"
-                                  style={{ backgroundColor: item.selectedColor }}
-                                ></span>
-                                {item.selectedColor}
-                              </span>
-                            )}
-                            {item.selectedSize && (
-                              <span className="text-sm px-2 py-1 bg-gray-100 rounded-full">{item.selectedSize}</span>
-                            )}
-                          </div>
-                          <p className="text-sm mt-1">
-                            الكمية: {item.selectedQuantity} x ₪{(item.price || 0).toFixed(2)}
+                          <p className="text-sm">
+                            الكمية: {item.selectedQuantity} x ₪{item.price.toFixed(2)}
                           </p>
+                          {item.selectedColor && (
+                            <div className="flex items-center mt-1">
+                              <span className="text-xs text-gray-500 ml-2">اللون:</span>
+                              <div
+                                className="w-4 h-4 rounded-full border border-gray-300"
+                                style={{ backgroundColor: item.selectedColor }}
+                              ></div>
+                            </div>
+                          )}
+                          {item.selectedSize && <p className="text-xs text-gray-500">المقاس: {item.selectedSize}</p>}
                         </div>
-                        <div className="relative w-16 h-16 rounded-md overflow-hidden">
-                          <Image
-                            src={item.selectedImageUrl || "/placeholder.svg"}
-                            alt={item.name}
-                            layout="fill"
-                            objectFit="cover"
-                          />
-                        </div>
+                        <Image
+                          src={item.selectedImageUrl || "/placeholder.svg"}
+                          alt={item.name}
+                          width={64}
+                          height={64}
+                          className="rounded-md"
+                        />
                       </div>
                     ))}
                   </div>
@@ -190,29 +323,20 @@ export default function Navbar() {
 
           {user ? (
             <div className="relative">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-              >
+              <Button variant="ghost" size="icon" onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}>
                 <User className="h-5 w-5" />
               </Button>
               {isProfileDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                <div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
                   <div className="py-1">
                     <div className="px-4 py-2 text-sm text-gray-700">{user.email}</div>
-                    <Link
-                      href="/settings"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      <Settings className="inline-block h-4 w-4 mr-2" />
+                    <Link href="/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                       الإعدادات
                     </Link>
                     <button
                       onClick={handleLogout}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      className="w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     >
-                      <LogOut className="inline-block h-4 w-4 mr-2" />
                       تسجيل الخروج
                     </button>
                   </div>
@@ -220,9 +344,9 @@ export default function Navbar() {
               )}
             </div>
           ) : (
-            <Button size="sm" className="hidden md:inline-flex bg-black">
-              <Link href="/auth/login" className="text-foreground hover:text-muted-foreground transition-colors no-underline text-white">
-                ابدأ الآن
+            <Button size="sm" className="hidden md:inline-flex">
+              <Link href="/auth/login" className="text-foreground hover:text-muted-foreground transition-colors">
+                تسجيل الدخول
               </Link>
             </Button>
           )}
@@ -233,16 +357,17 @@ export default function Navbar() {
       <div className={cn("fixed inset-0 z-50 bg-background md:hidden", isMobileMenuOpen ? "block" : "hidden")}>
         <div className="container h-full px-4 pb-6 pt-20">
           <nav className="flex flex-col space-y-4">
-            <Button className="bg-black">
-              <Link href="/Home" className="text-foreground hover:text-muted-foreground transition-colors no-underline text-white">
-                الصفحة الرئيسية
-              </Link>
-            </Button>
+            <Link href="/" className="text-lg font-medium" onClick={() => setIsMobileMenuOpen(false)}>
+              الرئيسية
+            </Link>
+            {/* Add more mobile menu items here */}
           </nav>
 
           {!user && (
             <div className="mt-6">
-              <Button className="w-full">ابدأ الآن</Button>
+              <Button className="w-full">
+                <Link href="/auth/login">تسجيل الدخول</Link>
+              </Button>
             </div>
           )}
 
@@ -260,3 +385,4 @@ export default function Navbar() {
     </header>
   )
 }
+
