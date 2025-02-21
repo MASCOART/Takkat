@@ -31,16 +31,14 @@ export default function CategoriesSection() {
   useEffect(() => {
     const fetchCategoriesAndCounts = async () => {
       try {
-        // Fetch categories
         const categoriesCollection = collection(db, "categories")
         const categoriesSnapshot = await getDocs(categoriesCollection)
         const categoriesList = categoriesSnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
-          productCount: 0, // Initialize count
+          productCount: 0,
         })) as Category[]
 
-        // Fetch product counts for each category
         const productsCollection = collection(db, "products")
         const productCountPromises = categoriesList.map(async (category) => {
           const q = query(
@@ -53,8 +51,6 @@ export default function CategoriesSection() {
         })
 
         const productCounts = await Promise.all(productCountPromises)
-
-        // Update categories with product counts
         const categoriesWithCounts = categoriesList.map((category, index) => ({
           ...category,
           productCount: productCounts[index],
@@ -79,8 +75,8 @@ export default function CategoriesSection() {
             <Skeleton className="h-8 w-40" />
             <Skeleton className="h-6 w-20" />
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[...Array(4)].map((_, index) => (
+          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-4">
+            {[...Array(6)].map((_, index) => (
               <Skeleton key={index} className="aspect-square rounded-lg" />
             ))}
           </div>
@@ -107,29 +103,26 @@ export default function CategoriesSection() {
         whileTap={{ scale: 0.98 }}
         className="h-full"
       >
-        <Link href={`/home/Comp/${category.id}`} className="block h-full">
+        <Link href={`/category/${category.id}`} className="block h-full">
           <div className="relative aspect-square rounded-xl overflow-hidden bg-gray-50">
-            {/* Category Image */}
             <Image
               src={category.imageUrl || "/placeholder.svg"}
               alt={category.name}
               fill
               className="object-cover"
-              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+              sizes="(max-width: 768px) 33vw, 25vw"
               priority={index < 4}
             />
 
-            {/* Overlay */}
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/50" />
 
-            {/* Content */}
-            <div className="absolute inset-0 p-4 flex flex-col justify-between">
+            <div className="absolute inset-0 p-3 flex flex-col justify-between">
               <div className="self-start">
-                <span className="inline-flex items-center rounded-full bg-white/90 px-2.5 py-1 text-xs font-medium text-gray-900">
+                <span className="inline-flex items-center rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-medium text-gray-900">
                   {category.productCount} منتج
                 </span>
               </div>
-              <h3 className="text-lg font-medium text-white">{category.name}</h3>
+              <h3 className="text-sm font-medium text-white">{category.name}</h3>
             </div>
           </div>
         </Link>
@@ -152,38 +145,35 @@ export default function CategoriesSection() {
           </Button>
         </motion.div>
 
-        {/* Mobile Swiper */}
-        <div className="md:hidden">
+        {/* Mobile and Desktop Swiper */}
+        <div className="relative">
           <Swiper
-            slidesPerView={1.2}
-            spaceBetween={16}
+            slidesPerView={2.5}
+            spaceBetween={12}
             pagination={{
               clickable: true,
+              dynamicBullets: true,
+            }}
+            breakpoints={{
+              640: {
+                slidesPerView: 4.5,
+                spaceBetween: 16,
+              },
+              1024: {
+                slidesPerView: 6.5,
+                spaceBetween: 20,
+              },
             }}
             modules={[Pagination]}
-            className="mySwiper"
+            className="mySwiper !pb-12"
           >
             {categories.map((category, index) => (
               <SwiperSlide key={category.id}>
-                <div className="pb-8">
-                  <CategoryCard category={category} index={index} />
-                </div>
+                <CategoryCard category={category} index={index} />
               </SwiperSlide>
             ))}
           </Swiper>
         </div>
-
-        {/* Desktop Grid */}
-        <motion.div
-          className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-6"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          {categories.slice(0, 4).map((category, index) => (
-            <CategoryCard key={category.id} category={category} index={index} />
-          ))}
-        </motion.div>
       </div>
 
       <AnimatePresence>
@@ -198,7 +188,7 @@ export default function CategoriesSection() {
               >
                 <ModalHeader className="text-center">جميع الفئات</ModalHeader>
                 <ModalBody>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4 p-4">
                     {categories.map((category, index) => (
                       <CategoryCard key={category.id} category={category} index={index} isModal={true} />
                     ))}
@@ -214,6 +204,27 @@ export default function CategoriesSection() {
           </Modal>
         )}
       </AnimatePresence>
+
+      <style jsx global>{`
+        .swiper-button-next,
+        .swiper-button-prev {
+          color: #000;
+          background: white;
+          border-radius: 50%;
+          width: 35px;
+          height: 35px;
+        }
+
+        .swiper-button-next:after,
+        .swiper-button-prev:after {
+          font-size: 1.2rem;
+        }
+
+        .swiper-button-disabled {
+          opacity: 0.35;
+          pointer-events: none;
+        }
+      `}</style>
     </section>
   )
 }
