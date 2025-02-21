@@ -10,6 +10,7 @@ import { ProductGrid, type Product } from "./ProductGrid"
 import FilterSidebar from "./FilterSidebar"
 import Image from "next/image"
 import Navbar from "./navbar"
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface Category {
   id: string
@@ -90,9 +91,11 @@ export default function CategoryPage() {
       const matchesCategories =
         filters.categories.length === 0 || filters.categories.some((cat) => product.categories.includes(cat))
       const matchesSizes = filters.sizes.length === 0 || filters.sizes.some((size) => product.sizes?.includes(size))
-      const matchesStyles = filters.styles.length === 0 || filters.styles.some((style) => product.styles?.includes(style))
+      const matchesStyles =
+        filters.styles.length === 0 || filters.styles.some((style) => product.styles?.includes(style))
       const matchesColors =
-        filters.colors.length === 0 || filters.colors.some((color) => product.colors.some((c: { name: string }) => c.name === color))
+        filters.colors.length === 0 ||
+        filters.colors.some((color) => product.colors.some((c: { name: string }) => c.name === color))
       const matchesMaterials =
         filters.materials.length === 0 || filters.materials.some((material) => product.materials?.includes(material))
 
@@ -116,8 +119,38 @@ export default function CategoryPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      <div>
+        <Navbar />
+        <div className="container mx-auto px-4 py-8" dir="rtl">
+          <div className="flex flex-col lg:flex-row gap-8 mb-8">
+            <div className="lg:w-1/4">
+              <Skeleton className="w-full h-[400px] rounded-lg mb-8" />
+              <div className="space-y-4">
+                <Skeleton className="w-full h-10" />
+                <Skeleton className="w-full h-10" />
+                <Skeleton className="w-full h-10" />
+                <Skeleton className="w-full h-10" />
+              </div>
+            </div>
+            <div className="lg:w-3/4">
+              <div className="flex justify-between items-center mb-6">
+                <Skeleton className="w-1/3 h-8" />
+                <Skeleton className="w-1/4 h-6" />
+              </div>
+              <Skeleton className="w-2/3 h-12 mb-4" />
+              <Skeleton className="w-full h-24 mb-6" />
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {[...Array(8)].map((_, index) => (
+                  <div key={index} className="space-y-4">
+                    <Skeleton className="w-full h-48 rounded-lg" />
+                    <Skeleton className="w-2/3 h-6" />
+                    <Skeleton className="w-1/2 h-4" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     )
   }
@@ -132,60 +165,59 @@ export default function CategoryPage() {
 
   return (
     <div>
-<Navbar/>
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      className="min-h-screen"
-    >
-    
-      <div className="container mx-auto px-4 py-8" dir="rtl">
-        <div className="flex flex-col lg:flex-row gap-8 mb-8">
-          <div className="lg:w-1/4">
-            {category.imageUrl && (
-              <motion.div
-                initial={{ scale: 0.95, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.5 }}
-                className="mb-8"
-              >
-                <Image
-                  src={category.imageUrl || "/placeholder.svg"}
-                  alt={`صورة فئة ${category.name}`}
-                  width={400}
-                  height={400}
-                  className="w-full h-auto object-cover rounded-lg shadow-lg"
-                />
-              </motion.div>
-            )}
-            <FilterSidebar filters={filters} onFilterChange={handleFilterChange} products={products} />
-          </div>
-
-          <div className="lg:w-3/4">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-semibold">المنتجات</h2>
-              <p className="text-gray-600">
-                عرض {filteredProducts.length} من أصل {products.length} منتج
-              </p>
+      <Navbar />
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        className="min-h-screen"
+      >
+        <div className="container mx-auto px-4 py-8" dir="rtl">
+          <div className="flex flex-col lg:flex-row gap-8 mb-8">
+            <div className="lg:w-1/4">
+              {category.imageUrl && (
+                <motion.div
+                  initial={{ scale: 0.95, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.5 }}
+                  className="mb-8"
+                >
+                  <Image
+                    src={category.imageUrl || "/placeholder.svg"}
+                    alt={`صورة فئة ${category.name}`}
+                    width={400}
+                    height={400}
+                    className="w-full h-auto object-cover rounded-lg shadow-lg"
+                  />
+                </motion.div>
+              )}
+              <FilterSidebar filters={filters} onFilterChange={handleFilterChange} products={products} />
             </div>
-            <h1 className="text-4xl font-bold mb-4">{category.name}</h1>
-            <p className="text-gray-600 mb-6">
-              اكتشف أحدث مجموعة من {category.name}. منتجات عالية الجودة مصممة لتعزيز أناقتك وراحتك.
-            </p>
-            <nav className="text-sm mb-4">
-              <Link href="/Home" className="text-gray-500 hover:text-gray-900">
-                الرئيسية
-              </Link>
-              <span className="mx-2">/</span>
-              <span className="text-primary">{category.name}</span>
-            </nav>
-            <ProductGrid products={filteredProducts} />
+
+            <div className="lg:w-3/4">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-semibold">المنتجات</h2>
+                <p className="text-gray-600">
+                  عرض {filteredProducts.length} من أصل {products.length} منتج
+                </p>
+              </div>
+              <h1 className="text-4xl font-bold mb-4">{category.name}</h1>
+              <p className="text-gray-600 mb-6">
+                اكتشف أحدث مجموعة من {category.name}. منتجات عالية الجودة مصممة لتعزيز أناقتك وراحتك.
+              </p>
+              <nav className="text-sm mb-4">
+                <Link href="/Home" className="text-gray-500 hover:text-gray-900">
+                  الرئيسية
+                </Link>
+                <span className="mx-2">/</span>
+                <span className="text-primary">{category.name}</span>
+              </nav>
+              <ProductGrid products={filteredProducts} />
+            </div>
           </div>
         </div>
-      </div>
-    </motion.div>
+      </motion.div>
     </div>
-
   )
 }
+

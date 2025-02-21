@@ -8,6 +8,7 @@ import { Button } from "@nextui-org/react"
 import { collection, getDocs } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { motion, AnimatePresence } from "framer-motion"
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface HeroSlide {
   id: string
@@ -20,16 +21,23 @@ interface HeroSlide {
 export default function Hero() {
   const [slides, setSlides] = useState<HeroSlide[]>([])
   const [currentSlide, setCurrentSlide] = useState(0)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchSlides = async () => {
-      const slidesCollection = collection(db, "heroSlides")
-      const slidesSnapshot = await getDocs(slidesCollection)
-      const slidesList = slidesSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as HeroSlide[]
-      setSlides(slidesList)
+      try {
+        const slidesCollection = collection(db, "heroSlides")
+        const slidesSnapshot = await getDocs(slidesCollection)
+        const slidesList = slidesSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as HeroSlide[]
+        setSlides(slidesList)
+      } catch (error) {
+        console.error("Error fetching hero slides:", error)
+      } finally {
+        setLoading(false)
+      }
     }
 
     fetchSlides()
@@ -50,8 +58,28 @@ export default function Hero() {
     }
   }, [slides.length, nextSlide])
 
+  if (loading) {
+    return (
+      <section className="relative min-h-[400px] md:min-h-[600px] border rtl overflow-hidden" dir="rtl">
+        <div className="absolute inset-0 bg-gray-200">
+          <Skeleton className="w-full h-full" />
+        </div>
+        <div className="absolute inset-0 z-10 flex items-center justify-center">
+          <div className="container px-4">
+            <div className="text-center max-w-3xl mx-auto">
+              <Skeleton className="h-12 w-3/4 mx-auto mb-4" />
+              <Skeleton className="h-4 w-full mx-auto mb-6" />
+              <Skeleton className="h-4 w-2/3 mx-auto mb-8" />
+              <Skeleton className="h-10 w-40 mx-auto" />
+            </div>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
   if (slides.length === 0) {
-    return <div className="min-h-[400px] md:min-h-[600px] flex items-center justify-center">Loading...</div>
+    return <div className="min-h-[400px] md:min-h-[600px] flex items-center justify-center">No slides available</div>
   }
 
   const slide = slides[currentSlide]
@@ -106,7 +134,6 @@ export default function Hero() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6, duration: 0.5 }}
               >
-                
                 <Link
                   href={slide.linkUrl}
                   className="text-white bg-black inline-block px-6 py-2 md:px-8 md:py-3 text-xl hover:bg-white hover:text-black transition-colors no-underline"

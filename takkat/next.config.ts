@@ -20,6 +20,7 @@ const nextConfig = {
       "wallpaperaccess.com",
       "img-s-msn-com.akamaized.net",
       "media.istockphoto.com",
+      "weiboo.pixcelsthemes.com",
     ],
   },
 };

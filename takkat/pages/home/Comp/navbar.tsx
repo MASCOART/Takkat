@@ -172,11 +172,11 @@ export default function Navbar() {
                 <Search className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="top" className="w-full max-w-2xl mx-auto">
-              <SheetHeader>
-                <SheetTitle>البحث عن منتج</SheetTitle>
+            <SheetContent side="top" className="w-full max-w-2xl mx-auto" >
+              <SheetHeader >
+                <SheetTitle >البحث عن منتج</SheetTitle>
               </SheetHeader>
-              <div className="mt-4 flex items-center">
+              <div className="mt-4 flex items-center" dir="rtl">
                 <Input
                   placeholder="أدخل رقم SKU (8 أحرف)"
                   value={searchQuery}

@@ -1,114 +1,220 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { motion } from "framer-motion"
-import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { Button } from "@nextui-org/react"
-import { collection, getDocs } from "firebase/firestore"
+import { collection, getDocs, query, where } from "firebase/firestore"
 import { db } from "@/lib/firebase"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Button } from "@nextui-org/react"
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure } from "@nextui-org/react"
+import { Swiper, SwiperSlide } from "swiper/react"
+import { Pagination } from "swiper/modules"
+import { motion, AnimatePresence } from "framer-motion"
+
+// Import Swiper styles
+import "swiper/css"
+import "swiper/css/pagination"
 
 interface Category {
   id: string
   name: string
   imageUrl: string
+  productCount?: number
 }
 
 export default function CategoriesSection() {
   const [categories, setCategories] = useState<Category[]>([])
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const containerRef = useRef<HTMLDivElement>(null)
+  const [loading, setLoading] = useState(true)
+  const { isOpen, onOpen, onClose } = useDisclosure()
 
-  // Fetch categories from Firestore
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchCategoriesAndCounts = async () => {
       try {
+        // Fetch categories
         const categoriesCollection = collection(db, "categories")
         const categoriesSnapshot = await getDocs(categoriesCollection)
         const categoriesList = categoriesSnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
+          productCount: 0, // Initialize count
         })) as Category[]
-        setCategories(categoriesList)
+
+        // Fetch product counts for each category
+        const productsCollection = collection(db, "products")
+        const productCountPromises = categoriesList.map(async (category) => {
+          const q = query(
+            productsCollection,
+            where("categories", "array-contains", category.id),
+            where("isVisible", "==", true),
+          )
+          const querySnapshot = await getDocs(q)
+          return querySnapshot.size
+        })
+
+        const productCounts = await Promise.all(productCountPromises)
+
+        // Update categories with product counts
+        const categoriesWithCounts = categoriesList.map((category, index) => ({
+          ...category,
+          productCount: productCounts[index],
+        }))
+
+        setCategories(categoriesWithCounts)
       } catch (error) {
         console.error("Error fetching categories:", error)
+      } finally {
+        setLoading(false)
       }
     }
 
-    fetchCategories()
+    fetchCategoriesAndCounts()
   }, [])
 
-  // Auto-slide functionality
-  useEffect(() => {
-    if (categories.length <= 5) return // No auto-slide if there are 5 or fewer categories
-
-    const autoSlide = setInterval(() => {
-      nextSlide()
-    }, 5000)
-
-    return () => clearInterval(autoSlide)
-  }, [categories.length]) // Add categories.length as a dependency
-
-  // Go to the next slide
-  const nextSlide = () => {
-    setCurrentIndex((prevIndex) => (prevIndex + 5 >= categories.length ? 0 : prevIndex + 5))
+  if (loading) {
+    return (
+      <section className="py-12 px-4" dir="rtl">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex justify-between items-center mb-8">
+            <Skeleton className="h-8 w-40" />
+            <Skeleton className="h-6 w-20" />
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, index) => (
+              <Skeleton key={index} className="aspect-square rounded-lg" />
+            ))}
+          </div>
+        </div>
+      </section>
+    )
   }
 
-  // Go to the previous slide
-  const prevSlide = () => {
-    setCurrentIndex((prevIndex) => (prevIndex - 5 < 0 ? Math.max(categories.length - 5, 0) : prevIndex - 5))
+  const CategoryCard = ({
+    category,
+    index,
+    isModal = false,
+  }: {
+    category: Category
+    index: number
+    isModal?: boolean
+  }) => {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: index * 0.1 }}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        className="h-full"
+      >
+        <Link href={`/home/Comp/${category.id}`} className="block h-full">
+          <div className="relative aspect-square rounded-xl overflow-hidden bg-gray-50">
+            {/* Category Image */}
+            <Image
+              src={category.imageUrl || "/placeholder.svg"}
+              alt={category.name}
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+              priority={index < 4}
+            />
+
+            {/* Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/50" />
+
+            {/* Content */}
+            <div className="absolute inset-0 p-4 flex flex-col justify-between">
+              <div className="self-start">
+                <span className="inline-flex items-center rounded-full bg-white/90 px-2.5 py-1 text-xs font-medium text-gray-900">
+                  {category.productCount} منتج
+                </span>
+              </div>
+              <h3 className="text-lg font-medium text-white">{category.name}</h3>
+            </div>
+          </div>
+        </Link>
+      </motion.div>
+    )
   }
 
   return (
-    <section className="py-12 px-4 rtl" dir="rtl">
-      <h2 className="text-3xl font-bold text-center mb-8">الفئات</h2>
-      <div className="relative max-w-6xl mx-auto">
-        <div ref={containerRef} className="overflow-hidden">
-          <motion.div
-            className="flex transition-transform duration-300 ease-in-out"
-            animate={{ x: `${-currentIndex * 20}%` }}
+    <section className="py-8 px-4" dir="rtl">
+      <div className="max-w-7xl mx-auto">
+        <motion.div
+          className="flex flex-col items-center mb-6"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <h2 className="text-2xl font-semibold text-gray-900 mb-3">اختر الفئات</h2>
+          <Button color="primary" variant="light" className="text-sm text-black" onClick={onOpen}>
+            عرض الكل
+          </Button>
+        </motion.div>
+
+        {/* Mobile Swiper */}
+        <div className="md:hidden">
+          <Swiper
+            slidesPerView={1.2}
+            spaceBetween={16}
+            pagination={{
+              clickable: true,
+            }}
+            modules={[Pagination]}
+            className="mySwiper"
           >
-            {categories.map((category) => (
-              <div key={category.id} className="w-full sm:w-1/2 md:w-1/3 lg:w-1/4 xl:w-1/5 flex-shrink-0 px-2">
-                <Link href={`/home/Comp/${category.id}`} className="block text-center group">
-                  <div className="relative w-32 h-32 mx-auto mb-2 rounded-full overflow-hidden transition-transform transform group-hover:scale-105">
-                    <Image
-                      src={category.imageUrl || "/placeholder.svg"}
-                      alt={category.name}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      priority={currentIndex <= 5} // Prioritize loading the first few images
-                    />
-                  </div>
-                  <Button className="bg-white text-lg w-full">{category.name}</Button>
-                </Link>
-              </div>
+            {categories.map((category, index) => (
+              <SwiperSlide key={category.id}>
+                <div className="pb-8">
+                  <CategoryCard category={category} index={index} />
+                </div>
+              </SwiperSlide>
             ))}
-          </motion.div>
+          </Swiper>
         </div>
-        {categories.length > 5 && (
-          <>
-            <Button
-              isIconOnly
-              className="absolute right-0 top-1/2 -translate-y-1/2 rotate-180 z-10"
-              onClick={prevSlide}
-              aria-label="Previous slide"
-            >
-              <ChevronLeft />
-            </Button>
-            <Button
-              isIconOnly
-              className="absolute left-0 top-1/2 -translate-y-1/2 rotate-180 z-10"
-              onClick={nextSlide}
-              aria-label="Next slide"
-            >
-              <ChevronRight />
-            </Button>
-          </>
-        )}
+
+        {/* Desktop Grid */}
+        <motion.div
+          className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          {categories.slice(0, 4).map((category, index) => (
+            <CategoryCard key={category.id} category={category} index={index} />
+          ))}
+        </motion.div>
       </div>
+
+      <AnimatePresence>
+        {isOpen && (
+          <Modal isOpen={isOpen} onClose={onClose} size="5xl" scrollBehavior="inside" dir="rtl">
+            <ModalContent>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ duration: 0.3 }}
+              >
+                <ModalHeader className="text-center">جميع الفئات</ModalHeader>
+                <ModalBody>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
+                    {categories.map((category, index) => (
+                      <CategoryCard key={category.id} category={category} index={index} isModal={true} />
+                    ))}
+                  </div>
+                </ModalBody>
+                <ModalFooter>
+                  <Button color="danger" variant="light" onPress={onClose}>
+                    إغلاق
+                  </Button>
+                </ModalFooter>
+              </motion.div>
+            </ModalContent>
+          </Modal>
+        )}
+      </AnimatePresence>
     </section>
   )
 }
+
