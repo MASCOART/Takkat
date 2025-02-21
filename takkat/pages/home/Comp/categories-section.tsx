@@ -103,7 +103,7 @@ export default function CategoriesSection() {
         whileTap={{ scale: 0.98 }}
         className="h-full"
       >
-        <Link href={`/category/${category.id}`} className="block h-full">
+        <Link href={`/home/Comp/${category.id}`} className="block h-full">
           <div className="relative aspect-square rounded-xl overflow-hidden bg-gray-50">
             <Image
               src={category.imageUrl || "/placeholder.svg"}

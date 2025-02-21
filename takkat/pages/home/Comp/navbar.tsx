@@ -155,7 +155,7 @@ export default function Navbar() {
         <div className="absolute right-1/2 translate-x-1/2">
           <Link href="/Home" className="flex flex-col items-center">
             <Image
-              src="https://media.discordapp.net/attachments/1317885123361767445/1342263249562767420/image_1.png?ex=67b8ff90&is=67b7ae10&hm=6b888129c37ef561b5bd17a8bfb44550d367916bb58cbdf13954e7431bbe2a35&=&format=webp&quality=lossless&width=449&height=449"
+              src="https://media.discordapp.net/attachments/1317885123361767445/1342599938533752903/Untitled-1.png?ex=67ba3921&is=67b8e7a1&hm=98fe8fde511d902f31405bf3e1aba735dfafc0603edef9ad959b183856a44ef6&=&format=webp&quality=lossless&width=997&height=543"
               alt="Takkat"
               width={120}
               height={40}
@@ -165,14 +165,14 @@ export default function Navbar() {
         </div>
 
         {/* Right Side Icons */}
-        <div className="flex items-center space-x-4">
-          <Sheet open={isSearchOpen} onOpenChange={setIsSearchOpen}>
+        <div className="flex items-center ">
+          <Sheet open={isSearchOpen} onOpenChange={setIsSearchOpen} >
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon">
-                <Search className="h-5 w-5" />
+                <Search className="h-5 w-5 " />
               </Button>
             </SheetTrigger>
-            <SheetContent side="top" className="w-full max-w-2xl mx-auto" >
+            <SheetContent side="top" className="w-full max-w-2xl mx-auto" dir="rtl" >
               <SheetHeader >
                 <SheetTitle >البحث عن منتج</SheetTitle>
               </SheetHeader>

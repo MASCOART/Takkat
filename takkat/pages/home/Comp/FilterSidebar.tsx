@@ -160,28 +160,12 @@ export default function FilterSidebar({ filters, onFilterChange, products }: Fil
           </div>
         </div>
 
-        {/* Material Section */}
-        <div className="mb-6">
-          <h4 className="font-medium mb-3">الخامة</h4>
-          <div className="space-y-2">
-            {materials.map((material) => (
-              <div key={material} className="flex items-center">
-                <Checkbox
-                  size="sm"
-                  isSelected={filters.materials.includes(material)}
-                  onValueChange={() => handleCheckboxChange("materials", material)}
-                >
-                  {material}
-                </Checkbox>
-              </div>
-            ))}
-          </div>
-        </div>
+   
 
         {/* Price Range Section */}
         <div className="mb-6">
           <h4 className="font-medium mb-3">نطاق السعر</h4>
-          <div className="space-y-4">
+          <div className="space-y-4 ">
             <Slider
               label="السعر"
               step={10}
@@ -190,7 +174,7 @@ export default function FilterSidebar({ filters, onFilterChange, products }: Fil
               value={priceRange}
               onChange={handlePriceRangeChange}
               formatOptions={{ style: "currency", currency: "NIS" }}
-              className="max-w-md"
+              className="max-w-md "
             />
             <div className="flex gap-2">
               <Input

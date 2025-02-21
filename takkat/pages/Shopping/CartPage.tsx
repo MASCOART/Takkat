@@ -83,11 +83,10 @@ const ShoppingCart = () => {
   )
 
   return (
-    <div>
-      <Navbar/>
-    <div className="min-h-screen bg-gray-50" dir="rtl">
-      <div className="container mx-auto py-12 px-4">
-        <h1 className="text-3xl font-semibold text-center mb-8">سلة التسوق</h1>
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
+      <div className="container mx-auto py-6 px-4 sm:py-12" dir="rtl">
+        <h1 className="text-2xl sm:text-3xl font-semibold text-center mb-6 sm:mb-8">سلة التسوق</h1>
 
         {isLoading ? (
           <div className="flex flex-col lg:flex-row gap-8">
@@ -126,22 +125,24 @@ const ShoppingCart = () => {
               <p className="text-xl font-semibold mb-2">سلة التسوق فارغة</p>
               <p className="text-gray-500 mb-4">يبدو أنك لم تقم بإضافة أي عناصر إلى سلة التسوق بعد.</p>
               <Link href="/" passHref>
-                <Button color="primary">مواصلة التسوق</Button>
+                <Button color="primary" className="bg-black">
+                  مواصلة التسوق
+                </Button>
               </Link>
             </CardBody>
           </Card>
         ) : (
-          <div className="flex flex-col lg:flex-row gap-8">
-            <div className="lg:w-2/3">
+          <div className="flex flex-col lg:flex-row gap-6 sm:gap-8">
+            <div className="w-full lg:w-2/3">
               <Card>
                 <CardHeader>
-                  <h2 className="text-xl font-semibold">العناصر في السلة</h2>
+                  <h2 className="text-lg sm:text-xl font-semibold">العناصر في السلة</h2>
                 </CardHeader>
                 <Divider />
                 <CardBody>
                   {items.map((item, index) => (
                     <React.Fragment key={item.id}>
-                      <div className="flex items-center justify-between py-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between py-4 gap-4">
                         <div className="flex items-center gap-4">
                           <Image
                             src={item.selectedImageUrl || "/placeholder.svg"}
@@ -167,13 +168,14 @@ const ShoppingCart = () => {
                               variant="light"
                               size="sm"
                               onClick={() => removeItem(item.id)}
+                              className="mt-2 sm:mt-0"
                             >
                               <X size={16} />
                             </Button>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-4">
                           <div className="flex items-center gap-2">
                             <Button isIconOnly variant="flat" size="sm" onClick={() => updateQuantity(item.id, -1)}>
                               <Minus size={16} />
@@ -206,10 +208,10 @@ const ShoppingCart = () => {
               </Card>
             </div>
 
-            <div className="lg:w-1/3">
+            <div className="w-full lg:w-1/3 mt-6 lg:mt-0">
               <Card>
                 <CardHeader>
-                  <h2 className="text-xl font-semibold">ملخص الطلب</h2>
+                  <h2 className="text-lg sm:text-xl font-semibold">ملخص الطلب</h2>
                 </CardHeader>
                 <Divider />
                 <CardBody>
@@ -224,7 +226,12 @@ const ShoppingCart = () => {
                 </CardBody>
                 <Divider />
                 <CardFooter>
-                  <Button color="primary" className="w-full" onClick={handleProceedToPayment} isLoading={isProcessing}>
+                  <Button
+                    color="primary"
+                    className="w-full bg-black"
+                    onClick={handleProceedToPayment}
+                    isLoading={isProcessing}
+                  >
                     {isProcessing ? "جارٍ المعالجة..." : "المتابعة إلى الدفع"}
                   </Button>
                 </CardFooter>
@@ -233,7 +240,6 @@ const ShoppingCart = () => {
           </div>
         )}
       </div>
-    </div>
     </div>
   )
 }
