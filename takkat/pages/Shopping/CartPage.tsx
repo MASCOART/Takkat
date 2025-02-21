@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import { Button, Card, CardBody, CardHeader, CardFooter, Divider, Tooltip, Skeleton } from "@nextui-org/react"
 import { X, Plus, Minus } from "lucide-react"
 import Navbar from "../home/Comp/navbar"
+import RandomProducts from "../home/Comp/product/RandomProducts"
 
 interface CartItem {
   id: string
@@ -240,6 +241,7 @@ const ShoppingCart = () => {
           </div>
         )}
       </div>
+      <RandomProducts/>
     </div>
   )
 }
