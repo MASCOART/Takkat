@@ -9,6 +9,7 @@ import { motion } from "framer-motion"
 import { ProductGrid, type Product } from "./ProductGrid"
 import FilterSidebar from "./FilterSidebar"
 import Image from "next/image"
+import Navbar from "./navbar"
 
 interface Category {
   id: string
@@ -130,6 +131,8 @@ export default function CategoryPage() {
   }
 
   return (
+    <div>
+<Navbar/>
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -182,5 +185,7 @@ export default function CategoryPage() {
         </div>
       </div>
     </motion.div>
+    </div>
+
   )
 }
