@@ -14,6 +14,7 @@ import Navbar from "../navbar"
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { FaShoppingCart, FaShoppingBag } from 'react-icons/fa'; // Import icons from react-icons
+import RelatedProducts from "./RelatedProducts"
 
 interface Product {
   id: string
@@ -313,9 +314,8 @@ export default function ProductPage() {
                   <button
                     key={color.name}
                     onClick={() => handleColorChange(color.name)}
-                    className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden ${
-                      color.name === selectedColor ? "ring-2 ring-primary" : "ring-1 ring-gray-200"
-                    }`}
+                    className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden ${color.name === selectedColor ? "ring-2 ring-primary" : "ring-1 ring-gray-200"
+                      }`}
                   >
                     {color.imageUrl ? (
                       <Image
@@ -375,9 +375,8 @@ export default function ProductPage() {
                     <button
                       key={color.name}
                       onClick={() => handleColorChange(color.name)}
-                      className={`w-12 h-12 rounded-full border-2 ${
-                        selectedColor === color.name ? "border-primary" : "border-transparent"
-                      }`}
+                      className={`w-12 h-12 rounded-full border-2 ${selectedColor === color.name ? "border-primary" : "border-transparent"
+                        }`}
                     >
                       <div
                         className="w-full h-full rounded-full"
@@ -397,11 +396,10 @@ export default function ProductPage() {
                     <button
                       key={size}
                       onClick={() => setSelectedSize(size)}
-                      className={`py-2 border rounded ${
-                        selectedSize === size
+                      className={`py-2 border rounded ${selectedSize === size
                           ? "border-primary bg-primary text-white  bg-black "
                           : "border-gray-200 hover:border-primary text-gray"
-                      }`}
+                        }`}
                     >
                       {size}
                     </button>
@@ -460,24 +458,24 @@ export default function ProductPage() {
       </div>
 
       <Modal isOpen={isModalOpen} onClose={handleCloseModal}>
-  <ModalContent>
-    <ModalHeader className="flex flex-col gap-1" dir="rtl">تمت الإضافة إلى السلة</ModalHeader>
-    <ModalBody dir="rtl">
-      <p>تمت إضافة المنتج إلى سلة التسوق بنجاح.</p>
-    </ModalBody>
-    <ModalFooter>
-      <Button color="primary" onClick={handleViewCart}>
-        <FaShoppingCart className="mr-2" /> {/* Add cart icon */}
-        عرض السلة
-      </Button>
-      <Button color="secondary" onClick={() => window.history.back()}>
-                <FaShoppingBag className="mr-2" /> {/* Add shopping bag icon */}
-        متابعة التسوق
-      </Button>
-    </ModalFooter>
-  </ModalContent>
-</Modal>
-    </div>
+        <ModalContent>
+          <ModalHeader className="flex flex-col gap-1" dir="rtl">تمت الإضافة إلى السلة</ModalHeader>
+          <ModalBody dir="rtl">
+            <p>تمت إضافة المنتج إلى سلة التسوق بنجاح.</p>
+          </ModalBody>
+          <ModalFooter>
+            <Button color="primary" onClick={handleViewCart}>
+              <FaShoppingCart className="mr-2" /> {/* Add cart icon */}
+              عرض السلة
+            </Button>
+            <Button color="secondary" onClick={() => window.history.back()}>
+              <FaShoppingBag className="mr-2" /> {/* Add shopping bag icon */}
+              متابعة التسوق
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+      <RelatedProducts currentProductId={product.id} category={product.categories[0]} />    </div>
   )
 }
 
