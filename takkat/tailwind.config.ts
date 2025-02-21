@@ -1,4 +1,4 @@
-import { nextui } from "@nextui-org/react"
+import { nextui } from "@nextui-org/react";
 
 /** @type {import('tailwindcss').Config} */
 const config = {
@@ -52,9 +52,14 @@ const config = {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      fontFamily: {
+        montserrat: ["Montserrat", "sans-serif"],
+        oswald: ["Oswald", "sans-serif"],
+        tajawal: ["Tajawal", "sans-serif"],
+      },
     },
   },
   plugins: [nextui(), require("tailwindcss-animate")],
-}
+};
 
-export default config
+export default config;
