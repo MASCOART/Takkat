@@ -57,13 +57,7 @@ const ShoppingCart = () => {
   const subtotal = items.reduce((sum, item) => sum + (item.salePrice || item.price) * item.selectedQuantity, 0)
   const itemCount = items.reduce((sum, item) => sum + item.selectedQuantity, 0)
 
-  const handleProceedToPayment = async () => {
-    setIsProcessing(true)
-    // Simulating a delay for processing
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-    // Navigate to the payment page
-    router.push("/payment")
-  }
+ 
 
   const renderSkeletonItem = () => (
     <div className="flex items-center justify-between py-4">
@@ -227,15 +221,17 @@ const ShoppingCart = () => {
                 </CardBody>
                 <Divider />
                 <CardFooter>
+                  <Link href={"/Shopping/PaymentForm"} className="w-full bg-black">
                   <Button
                     color="primary"
                     className="w-full bg-black"
-                    onClick={handleProceedToPayment}
-                    isLoading={isProcessing}
+               
                   >
                     {isProcessing ? "جارٍ المعالجة..." : "المتابعة إلى الدفع"}
                   </Button>
+                  </Link>
                 </CardFooter>
+                
               </Card>
             </div>
           </div>

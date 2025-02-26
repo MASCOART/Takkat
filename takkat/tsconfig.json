@@ -17,6 +17,6 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "lib/firebase.js"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "lib/firebase.js", "pages/api/send-order-email.ts"],
   "exclude": ["node_modules"]
 }

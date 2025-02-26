@@ -310,12 +310,16 @@ export default function Navbar() {
                     <span className="font-semibold">المجموع:</span>
                     <span>₪{getTotalPrice().toFixed(2)}</span>
                   </div>
-                  <Button className="w-full bg-black" onClick={() => setIsCartOpen(false)}>
-                    عرض السلة
+                  <Link href={"/Shopping/CartPage"} className="mt-1">
+                  <Button  className="w-full bg-black mt-1" >
+                  سله التسوق
                   </Button>
-                  <Button className="w-full bg-black" disabled={cartItems.length === 0}>
+                  </Link>
+                  <Link href={"/Shopping/PaymentForm"} className="mt-1">
+                  <Button  className="w-full bg-black mt-1" >
                     الدفع
                   </Button>
+                  </Link>
                 </div>
               </SheetFooter>
             </SheetContent>

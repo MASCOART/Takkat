@@ -11,6 +11,7 @@ import { Dashboard } from "./dashboard"
 import Hero from "./hero"
 import Cata from "./catagroy"
 import Products from "./products"
+import Orders from "./orders"
 interface SidebarProps {
   className?: string
 }
@@ -31,6 +32,8 @@ export function AdminSidebar({ className }: SidebarProps) {
         return 
       case "hero":
         return <Hero/>
+        case "Orders":
+        return <Orders/>
       default:
         return <Dashboard />
     }
@@ -93,6 +96,13 @@ export function AdminSidebar({ className }: SidebarProps) {
               title="catagroy"
               isActive={activeSection === "catagroy"}
               onClick={() => setActiveSection("catagroy")}
+              isCollapsed={isCollapsed}
+            />
+               <SidebarItem
+              icon={FileText}
+              title="Orders"
+              isActive={activeSection === "Orders"}
+              onClick={() => setActiveSection("Orders")}
               isCollapsed={isCollapsed}
             />
           </nav>

@@ -40,6 +40,8 @@ interface Product {
     colors: { name: string; imageUrl: string }[]
     sizes: string[] // Ensure sizes is always an array
     isTopSeller: boolean
+    pack: boolean
+
     isVisible: boolean
     categories: string[]
 }
@@ -61,6 +63,7 @@ export default function ProductsManage() {
         colors: [],
         sizes: [], // Initialize sizes as an empty array
         isTopSeller: false,
+        pack: false,
         isVisible: true,
         categories: [],
     })
@@ -214,6 +217,8 @@ export default function ProductsManage() {
                 colors: productData.colors,
                 sizes: productData.sizes, // Ensure sizes is included
                 isTopSeller: productData.isTopSeller,
+                pack: productData.pack,
+
                 isVisible: productData.isVisible,
                 categories: productData.categories,
             })
@@ -235,6 +240,8 @@ export default function ProductsManage() {
                 colors: [],
                 sizes: [], // Reset sizes
                 isTopSeller: false,
+                pack: false,
+
                 isVisible: true,
                 categories: [],
             })
@@ -477,6 +484,12 @@ export default function ProductsManage() {
                                 Top Seller
                             </Checkbox>
                             <Checkbox
+                                isSelected={editingProduct ? editingProduct.pack : newProduct.pack}
+                                onValueChange={(checked) => handleCheckboxChange("pack", checked)}
+                            >
+                                pack
+                            </Checkbox>
+                            <Checkbox
                                 isSelected={editingProduct ? editingProduct.isVisible : newProduct.isVisible}
                                 onValueChange={(checked) => handleCheckboxChange("isVisible", checked)}
                             >
@@ -537,6 +550,9 @@ export default function ProductsManage() {
                                 </p>
                                 <p>
                                     <strong>Top Seller:</strong> {viewingProduct.isTopSeller ? "Yes" : "No"}
+                                </p>
+                                <p>
+                                    <strong>pack:</strong> {viewingProduct.pack ? "Yes" : "No"}
                                 </p>
                                 <p>
                                     <strong>Visible:</strong> {viewingProduct.isVisible ? "Yes" : "No"}

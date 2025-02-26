@@ -10,11 +10,12 @@ import Footer from './home/Comp/footer';
 const Home: React.FC = () => {
   return (
     <div>
-    <Navbar/>
-    <Hero/>
-<CategoriesSection/>
-<TopSeller/>
-<Footer/>
+      <Navbar />
+      <Hero />
+      <CategoriesSection />
+
+      <TopSeller />
+      <Footer />
     </div>
 
 
