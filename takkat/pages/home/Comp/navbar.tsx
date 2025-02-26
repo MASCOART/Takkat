@@ -344,8 +344,8 @@ export default function Navbar() {
               )}
             </div>
           ) : (
-            <Button size="sm" className="hidden md:inline-flex">
-              <Link href="/auth/login" className="text-foreground hover:text-muted-foreground transition-colors">
+            <Button size="sm" className="hidden md:inline-flex bg-black mr-4 ">
+              <Link href="/auth/login" className="text-foreground hover:text-muted-foreground transition-colors no-underline text-white ">
                 تسجيل الدخول
               </Link>
             </Button>
