@@ -108,7 +108,7 @@ export default function TopSeller() {
     <section className="py-12" dir="rtl">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
-          <h3 className="text-4xl uppercase tracking-wider text-gray-900 mb-2">المنتجات الأكثر مبيعاً</h3>
+          <h3 className="text-4xl uppercase  text-gray-900 mb-2">المنتجات الأكثر مبيعاً</h3>
         </div>
 
         <Swiper

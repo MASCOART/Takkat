@@ -4,6 +4,7 @@ import Navbar from './home/Comp/navbar';
 import Hero from './home/Comp/hero';
 import CategoriesSection from './home/Comp/categories-section';
 import TopSeller from './home/Comp/Topseller';
+import Footer from './home/Comp/footer';
 
 
 const Home: React.FC = () => {
@@ -13,6 +14,7 @@ const Home: React.FC = () => {
     <Hero/>
 <CategoriesSection/>
 <TopSeller/>
+<Footer/>
     </div>
 
 
