@@ -5,7 +5,7 @@ import Hero from './home/Comp/hero';
 import CategoriesSection from './home/Comp/categories-section';
 import TopSeller from './home/Comp/Topseller';
 import Footer from './home/Comp/footer';
-
+import  Package  from './home/Comp/Packeges'
 
 const Home: React.FC = () => {
   return (
@@ -14,6 +14,7 @@ const Home: React.FC = () => {
     <Hero/>
 <CategoriesSection/>
 <TopSeller/>
+<Package/>
 <Footer/>
     </div>
 
