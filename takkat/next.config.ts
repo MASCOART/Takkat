@@ -21,6 +21,9 @@ const nextConfig = {
       "img-s-msn-com.akamaized.net",
       "media.istockphoto.com",
       "weiboo.pixcelsthemes.com",
+      "dricoper.com.au" ,
+       "sablyn.com","www.n22menswear.com",
+       "www.n22menswear.com" 
     ],
   },
 };

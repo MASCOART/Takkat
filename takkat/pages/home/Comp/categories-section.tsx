@@ -6,11 +6,11 @@ import Link from "next/link"
 import { collection, getDocs, query, where } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Button } from "@nextui-org/react"
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure } from "@nextui-org/react"
+import { Button } from "@/components/ui/button"
+import { motion, AnimatePresence } from "framer-motion"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Swiper, SwiperSlide } from "swiper/react"
 import { Pagination } from "swiper/modules"
-import { motion, AnimatePresence } from "framer-motion"
 
 // Import Swiper styles
 import "swiper/css"
@@ -26,7 +26,7 @@ interface Category {
 export default function CategoriesSection() {
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
-  const { isOpen, onOpen, onClose } = useDisclosure()
+  const [isOpen, setIsOpen] = useState(false)
 
   useEffect(() => {
     const fetchCategoriesAndCounts = async () => {
@@ -71,13 +71,15 @@ export default function CategoriesSection() {
     return (
       <section className="py-12 px-4" dir="rtl">
         <div className="max-w-7xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
+          <div className="flex justify-center items-center mb-8">
             <Skeleton className="h-8 w-40" />
-            <Skeleton className="h-6 w-20" />
           </div>
-          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-4">
-            {[...Array(6)].map((_, index) => (
-              <Skeleton key={index} className="aspect-square rounded-lg" />
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
+            {[...Array(5)].map((_, index) => (
+              <div key={index} className="flex flex-col items-center">
+                <Skeleton className="h-32 w-32 sm:h-40 sm:w-40 rounded-full" />
+                <Skeleton className="h-4 w-24 sm:w-32 mt-4" />
+              </div>
             ))}
           </div>
         </div>
@@ -88,84 +90,67 @@ export default function CategoriesSection() {
   const CategoryCard = ({
     category,
     index,
-    isModal = false,
   }: {
     category: Category
     index: number
-    isModal?: boolean
   }) => {
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: index * 0.1 }}
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        className="h-full"
+        className="flex flex-col items-center"
       >
-        <Link href={`/home/Comp/${category.id}`} className="block h-full">
-          <div className="relative aspect-square rounded-xl overflow-hidden bg-gray-50">
+        <Link href={`/home/Comp/${category.id}`} className="block no-underline">
+          <div className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-gray-100 overflow-hidden mb-4">
             <Image
               src={category.imageUrl || "/placeholder.svg"}
               alt={category.name}
               fill
               className="object-cover"
-              sizes="(max-width: 768px) 33vw, 25vw"
-              priority={index < 4}
+              sizes="(max-width: 640px) 128px, 160px"
+              priority={index < 5}
             />
-
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/50" />
-
-            <div className="absolute inset-0 p-3 flex flex-col justify-between">
-              <div className="self-start">
-                <span className="inline-flex items-center rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-medium text-gray-900">
-                  {category.productCount} منتج
-                </span>
-              </div>
-              <h3 className="text-sm font-medium text-white">{category.name}</h3>
-            </div>
           </div>
+          <h3 className="text-center text-sm font-medium text-gray-900 mt-2 max-w-[128px] sm:max-w-[160px]">
+            {category.name}
+          </h3>
+        
         </Link>
       </motion.div>
     )
   }
 
   return (
-    <section className="py-8 px-4" dir="rtl">
-      <div className="max-w-7xl mx-auto">
+    <section className="py-4 px-4" dir="rtl">
+      <div className="max-w-5xl mx-auto">
         <motion.div
-          className="flex flex-col items-center mb-6"
+          className="flex justify-center items-center mb-8"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <h2 className="text-2xl font-semibold text-gray-900 mb-3">اختر الفئات</h2>
-          <Button color="primary" variant="light" className="text-sm text-black" onClick={onOpen}>
-            عرض الكل
-          </Button>
+          <h2 className="text-2xl font-semibold text-gray-900">عرض الفئات</h2>
         </motion.div>
 
-        {/* Mobile and Desktop Swiper */}
-        <div className="relative">
+        {/* Desktop View */}
+        <div className="hidden sm:grid sm:grid-cols-3 lg:grid-cols-5 gap-6">
+          {categories.slice(0, 5).map((category, index) => (
+            <CategoryCard key={category.id} category={category} index={index} />
+          ))}
+        </div>
+
+        {/* Mobile Swiper */}
+        <div className="sm:hidden relative">
           <Swiper
-            slidesPerView={2.5}
-            spaceBetween={12}
+            slidesPerView={2.2}
+            spaceBetween={16}
             pagination={{
               clickable: true,
               dynamicBullets: true,
             }}
-            breakpoints={{
-              640: {
-                slidesPerView: 4.5,
-                spaceBetween: 16,
-              },
-              1024: {
-                slidesPerView: 6.5,
-                spaceBetween: 20,
-              },
-            }}
             modules={[Pagination]}
-            className="mySwiper !pb-12"
+            className="!pb-12"
           >
             {categories.map((category, index) => (
               <SwiperSlide key={category.id}>
@@ -174,55 +159,53 @@ export default function CategoriesSection() {
             ))}
           </Swiper>
         </div>
+
+        <div className="flex justify-center mt-8">
+          <Button variant="ghost" className="text-sm no-underline" onClick={() => setIsOpen(true)}>
+            عرض الكل
+          </Button>
+        </div>
       </div>
 
       <AnimatePresence>
-        {isOpen && (
-          <Modal isOpen={isOpen} onClose={onClose} size="5xl" scrollBehavior="inside" dir="rtl">
-            <ModalContent>
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.3 }}
-              >
-                <ModalHeader className="text-center">جميع الفئات</ModalHeader>
-                <ModalBody>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4 p-4">
-                    {categories.map((category, index) => (
-                      <CategoryCard key={category.id} category={category} index={index} isModal={true} />
-                    ))}
-                  </div>
-                </ModalBody>
-                <ModalFooter>
-                  <Button color="danger" variant="light" onPress={onClose}>
-                    إغلاق
-                  </Button>
-                </ModalFooter>
-              </motion.div>
-            </ModalContent>
-          </Modal>
-        )}
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <DialogContent className="max-w-5xl" dir="rtl">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ duration: 0.3 }}
+            >
+              <DialogHeader>
+                <DialogTitle className="text-center">جميع الفئات</DialogTitle>
+              </DialogHeader>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 p-4">
+                {categories.map((category, index) => (
+                  <CategoryCard key={category.id} category={category} index={index} />
+                ))}
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsOpen(false)}>
+                  إغلاق
+                </Button>
+              </DialogFooter>
+            </motion.div>
+          </DialogContent>
+        </Dialog>
       </AnimatePresence>
 
       <style jsx global>{`
-        .swiper-button-next,
-        .swiper-button-prev {
-          color: #000;
-          background: white;
-          border-radius: 50%;
-          width: 35px;
-          height: 35px;
+        .swiper-pagination-bullet {
+          background: #000;
+          opacity: 0.5;
+        }
+        
+        .swiper-pagination-bullet-active {
+          opacity: 1;
         }
 
-        .swiper-button-next:after,
-        .swiper-button-prev:after {
-          font-size: 1.2rem;
-        }
-
-        .swiper-button-disabled {
-          opacity: 0.35;
-          pointer-events: none;
+        a {
+          text-decoration: none;
         }
       `}</style>
     </section>
