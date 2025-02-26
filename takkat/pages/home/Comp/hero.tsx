@@ -130,17 +130,19 @@ export default function Hero() {
                 {slide.description}
               </motion.p>
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6, duration: 0.5 }}
-              >
-                <Link
-                  href={slide.linkUrl}
-                  className="text-white bg-black inline-block px-6 py-2 md:px-8 md:py-3 text-xl hover:bg-white hover:text-black transition-colors no-underline"
-                >
-                  تسوق الآن
-                </Link>
-              </motion.div>
+  initial={{ opacity: 0, y: 20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ delay: 0.6, duration: 0.5 }}
+>
+  <div className="flex justify-start"> {/* Align the button to the right */}
+    <Link
+      href={slide.linkUrl}
+      className="text-white bg-black inline-block px-6 py-2 md:px-8 md:py-3 text-xl hover:bg-white hover:text-black transition-colors no-underline"
+    >
+      تسوق الآن
+    </Link>
+  </div>
+</motion.div>
             </motion.div>
           </AnimatePresence>
         </div>
